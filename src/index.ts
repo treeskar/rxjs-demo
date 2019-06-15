@@ -218,28 +218,3 @@ focus$
     errorMessageElement.innerText =
       output instanceof Error ? `#ERROR: ${output.message}` : '';
   });
-
-// Highlight cell's dependency
-edit$
-  .pipe(
-    switchMap(cellElement => {
-      if (!(cellElement instanceof HTMLElement)) {
-        return of([]);
-      }
-      const cell = getCell(cellElement.dataset.id);
-      return cell.output$.pipe(map(() => cell.dependency));
-    }),
-    map<Cell[], HTMLElement[]>(cells => cells.map(cell => cell.element)),
-    pairwise()
-  )
-  .subscribe(
-    ([prevDependency, newDependency]: [HTMLElement[], HTMLElement[]]) => {
-      prevDependency
-        .filter(cell => !newDependency.includes(cell))
-        .forEach(cell => removeClass(cell, 'include'));
-
-      newDependency
-        .filter(cell => !prevDependency.includes(cell))
-        .forEach((cell: HTMLElement) => addClass(cell, 'include'));
-    }
-  );
