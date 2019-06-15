@@ -5,13 +5,15 @@ export function combineLatest(
 ): Observable<unknown[]> {
   return new Observable(subscriber => {
     const response: unknown[] = [];
-    const streamsMap: Map<number, boolean> = new Map();
+    const streamsSet: Set<number> = new Set();
     let notCompleted = observables.length;
     observables.forEach((observable, i: number) => {
       const nextHandler = (value: unknown) => {
-        streamsMap.set(i, true);
         response[i] = value;
-        if (streamsMap.size === observables.length) {
+        if (!streamsSet.has(i)) {
+          streamsSet.add(i);
+        }
+        if (streamsSet.size === observables.length) {
           subscriber.next(response);
         }
       };

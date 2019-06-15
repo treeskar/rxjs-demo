@@ -7,4 +7,3 @@ export * from './subscription';
 export * from './subjectSubscription';
 export * from './subscriber';
 export * from './types';
-export { OperatorFunctionType } from './types';
