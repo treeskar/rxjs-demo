@@ -1,0 +1,47 @@
+@mixin place-center {
+  display: flex;
+  place-items: center;
+  place-content: center;
+}
+
+@mixin triangle($direction, $size, $color) {
+  border: $size solid $color;
+  @if($direction == 'top') {
+    border-color: transparent transparent $color transparent;
+  }
+  @if ($direction == 'bottom') {
+    border-color: $color transparent transparent transparent;
+  }
+  @if ($direction == 'right') {
+    border-color: transparent transparent transparent $color;
+  }
+  @if ($direction == 'left') {
+    border-color: transparent $color transparent transparent;
+  }
+  @if ($direction == 'top-left') {
+    border-color: $color transparent transparent $color;
+  }
+  @if ($direction == 'top-right') {
+    border-color: $color $color transparent transparent;
+  }
+  @if ($direction == 'bottom-left') {
+    border-color: transparent transparent $color $color;
+  }
+  @if ($direction == 'bottom-right') {
+    border-color: transparent $color $color transparent;
+  }
+}
+
+@function focus-marker-border($color) {
+  @return conic-gradient(
+    transparent 0deg 50deg,
+    $color 50deg 85deg,
+    transparent 85deg 95deg,
+    $color 95deg 130deg,
+    transparent 130deg 230deg,
+    $color 230deg 265deg,
+    transparent 265deg 275deg,
+    $color 275deg 310deg,
+    transparent 310deg 360deg
+  ) 1;
+}

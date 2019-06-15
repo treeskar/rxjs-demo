@@ -1,0 +1,27 @@
+html {
+  --background: #2b2b2b;
+  --text: #ecf0f1;
+  --subPrimary: #7a07db;
+  --primary: #ff0290;
+  --hover: white;
+  --error: #ff3c3c;
+  --fontSize: 18px;
+  --border: #7e8a8c;
+  --cellWidth: 100px;
+  --cellHeight: 60px;
+}
+
+// colors
+$background: var(--background);
+$text: var(--text);
+$primary: var(--primary);
+$subPrimary: var(--subPrimary);
+$hover: var(--hover);
+$error: var(--error);
+$border: var(--border);
+
+$fontSize: var(--fontSize);
+$thyWidth: calc(var(--cellWidth) * 0.7);
+$cellHeight: var(--cellHeight);
+$cellWidth: var(--cellWidth);
+$border-style: 1px solid $border;
