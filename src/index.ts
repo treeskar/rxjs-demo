@@ -10,6 +10,9 @@ import {
   startWith,
   of,
   merge,
+  Observable,
+  from,
+  tap, share,
 } from './rxjs';
 import { Cell, getCell, getCellElement } from './cell';
 import {
@@ -59,45 +62,9 @@ fromEvent(document.body, 'mousemove')
     }
   });
 
-const focus$: BehaviorSubject<null | HTMLElement> = new BehaviorSubject(
-  getCellElement('A1')
-);
-const edit$: BehaviorSubject<null | HTMLElement> = new BehaviorSubject(null);
-
 const getClosestCell = map(({ target }: Event) =>
   (target as HTMLElement).closest('.cell')
 );
-
-// Listen to cell click
-fromEvent(cellsElement, 'click')
-  .pipe(getClosestCell)
-  .subscribe((newFocus: HTMLElement | null) => {
-    focus$.next(newFocus);
-  });
-
-// Display focused cell
-focus$
-  .pipe(
-    startWith(null),
-    pairwise()
-  )
-  .subscribe(([previousCell, currentCell]: Array<Element | null>) => {
-    if (previousCell instanceof HTMLElement) {
-      const [x, y] = Array.from(previousCell.dataset.id);
-      gridElement
-        .querySelectorAll(`.th-x[data-x="${x}"], .th-y[data-y="${y}"]`)
-        .forEach((th: HTMLElement) => removeClass(th, 'focus'));
-      removeClass(previousCell, 'focus');
-    }
-    if (currentCell instanceof HTMLElement) {
-      currentCell.classList.add('focus');
-      const [x, y] = Array.from(currentCell.dataset.id);
-      gridElement
-        .querySelectorAll(`.th-x[data-x="${x}"], .th-y[data-y="${y}"]`)
-        .forEach((th: HTMLElement) => addClass(th, 'focus'));
-      addClass(currentCell, 'focus');
-    }
-  });
 
 // Add keyboard navigation
 enum KEY_CODES {
@@ -108,84 +75,116 @@ enum KEY_CODES {
   Enter = 'Enter',
 }
 
-fromEvent<KeyboardEvent>(document.body, 'keydown')
-  .pipe(
-    filter(event => event.key in KEY_CODES && edit$.value === null),
-    withLatestFrom(focus$)
-  )
-  .subscribe(([event, cell]: [KeyboardEvent, HTMLElement]) => {
-    event.stopPropagation();
-    const [x, y] = Array.from(cell.dataset.id);
+enum MODE {
+  VIEW,
+  INSERT,
+}
+// emit start cell edit from input
+const isKeydownEnter = filter(
+  (event: KeyboardEvent) => event.key === KEY_CODES.Enter
+);
+const stopEventPropagation = tap((event: Event) => event.stopPropagation());
+
+const insertMode$ = merge(
+  fromEvent(inputElement, 'focus'),
+  fromEvent(document.body, 'keydown').pipe(isKeydownEnter)
+).pipe(
+  map(() => MODE.INSERT),
+  tap(() => inputElement.focus())
+);
+const viewMode$ = merge(
+  fromEvent(inputElement, 'blur'),
+  fromEvent(inputElement, 'keydown').pipe(
+    isKeydownEnter,
+    stopEventPropagation
+  ),
+).pipe(
+  startWith(null),
+  map(() => MODE.VIEW),
+  tap(() => cellsElement.focus())
+);
+
+const mode$ = merge(insertMode$, viewMode$);
+const cellClick$ = fromEvent(cellsElement, 'click').pipe(getClosestCell);
+const move$ = mode$.pipe(
+  switchMap(mode => mode === MODE.VIEW ? fromEvent<KeyboardEvent>(document.body, 'keydown') : of(null)),
+  filter((event) => event && event.key in KEY_CODES),
+  stopEventPropagation,
+  map((event: KeyboardEvent) => {
+    const cell: HTMLElement = cellsElement.querySelector('.cell.focus');
+    let cellId = cell.dataset.id;
+    const [x, y] = Array.from(cellId);
     let index: string | number;
     switch (event.key) {
       case KEY_CODES.ArrowLeft:
         index = ALPHABET.indexOf(x) - 1;
         if (index >= 0) {
-          focus$.next(getCellElement(ALPHABET[index] + y));
+          cellId = ALPHABET[index] + y;
         }
         break;
       case KEY_CODES.ArrowRight:
         index = ALPHABET.indexOf(x) + 1;
         if (index < ALPHABET.length) {
-          focus$.next(getCellElement(ALPHABET[index] + y));
+          cellId = ALPHABET[index] + y;
         }
         break;
       case KEY_CODES.ArrowUp:
         index = parseInt(y, 10) - 1;
         if (index > 0) {
-          focus$.next(getCellElement(x + index));
+          cellId = x + index;
         }
         break;
       case KEY_CODES.ArrowDown:
         index = parseInt(y, 10) + 1;
         if (index <= NUMBERS.length) {
-          focus$.next(getCellElement(x + index));
+          cellId = x + index;
         }
         break;
-      // TODO: 12 initiate editing on cell ENTER
-      case KEY_CODES.Enter:
-        edit$.next(cell);
-        break;
+    }
+    return getCellElement(cellId);
+  })
+);
+
+const selected$ = merge(
+  cellClick$,
+  move$,
+  from([null, getCellElement('A1')]),
+).pipe(
+  share(),
+);
+
+selected$.pipe(pairwise())
+  .subscribe(([previousCell, currentCell]: Array<HTMLElement | null>) => {
+    if (previousCell instanceof HTMLElement) {
+      const [x, y] = Array.from(previousCell.dataset.id);
+      gridElement
+        .querySelectorAll(`.th-x[data-x="${x}"], .th-y[data-y="${y}"]`)
+        .forEach((th: HTMLElement) => removeClass(th, 'focus'));
+      removeClass(previousCell, 'focus');
+    }
+    if (currentCell instanceof HTMLElement) {
+      currentCell.classList.add('focus');
+      const cellId = currentCell.dataset.id;
+      const [x, y] = Array.from(cellId);
+      gridElement
+        .querySelectorAll(`.th-x[data-x="${x}"], .th-y[data-y="${y}"]`)
+        .forEach((th: HTMLElement) => addClass(th, 'focus'));
+      addClass(currentCell, 'focus');
+
+      cellAddressElement.dataset.address = cellId;
+      const cell = getCell(cellId);
+      inputElement.value = cell.input$.value;
     }
   });
 
-// emit start cell edit from input
-fromEvent(inputElement, 'focus')
-  .pipe(filter(() => edit$.value === null && focus$.value !== null))
-  .subscribe(() => {
-    edit$.next(focus$.value);
-  });
-
-// emit end cell edit from input
-const inputBlur$ = fromEvent(inputElement, 'blur').pipe(
-  filter(() => edit$.value !== null && focus$.value !== null)
-);
-
-const inputEnter$ = fromEvent(inputElement, 'keydown').pipe(
-  filter((event: KeyboardEvent) => event.key === 'Enter')
-);
-
-merge(inputBlur$, inputEnter$).subscribe(
-  (event: KeyboardEvent | InputEvent) => {
-    event.stopPropagation();
-    edit$.next(null);
-  }
-);
-
-// Listen to start editing
-edit$.subscribe(cell => {
-  if (cell instanceof HTMLElement) {
-    inputElement.focus();
-  } else {
-    cellsElement.focus();
-  }
-});
-
 // emit cell input
-fromEvent(inputElement, 'input')
+mode$
   .pipe(
-    withLatestFrom(edit$),
-    filter(([event, cell]) => cell instanceof HTMLElement),
+    switchMap(mode =>
+      mode === MODE.INSERT ? fromEvent(inputElement, 'input') : of(null)
+    ),
+    filter(event => event),
+    withLatestFrom(selected$),
     map(([event, cell]) => ({
       value: event.target.value,
       cell: getCell(cell.dataset.id),
@@ -195,22 +194,9 @@ fromEvent(inputElement, 'input')
     cell.input$.next(value);
   });
 
-// update input cell address when cell focus changed
-focus$
-  .pipe(
-    filter(element => element instanceof HTMLElement),
-    map((element: HTMLElement) => element.dataset.id)
-  )
-  .subscribe((cellId: string) => {
-    cellAddressElement.dataset.address = cellId;
-    const cell = getCell(cellId);
-    inputElement.value = cell.input$.value;
-  });
-
 // Listen to error messages
-focus$
+selected$
   .pipe(
-    filter(cell => cell instanceof HTMLElement),
     map<HTMLElement, Cell>(cell => getCell(cell.dataset.id)),
     switchMap((cell: Cell) => cell.output$)
   )
