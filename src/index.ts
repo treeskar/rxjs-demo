@@ -4,7 +4,6 @@ import {
   fromEvent,
   filter,
   map,
-  withLatestFrom,
   pairwise,
   switchMap,
   startWith,
@@ -110,13 +109,10 @@ enum KEY_CODES {
 }
 
 fromEvent<KeyboardEvent>(document.body, 'keydown')
-  .pipe(
-    filter(event => event.key in KEY_CODES && mode$.value === MODE.VIEW),
-    withLatestFrom(selected$)
-  )
-  .subscribe(([event, cell]: [KeyboardEvent, HTMLElement]) => {
+  .pipe(filter(event => (event.key in KEY_CODES && mode$.value === MODE.VIEW)))
+  .subscribe((event: KeyboardEvent) => {
     event.stopPropagation();
-    const [x, y] = Array.from(cell.dataset.id);
+    const [x, y] = Array.from(selected$.value.dataset.id);
     let index: string | number;
     switch (event.key) {
       case KEY_CODES.ArrowLeft:
