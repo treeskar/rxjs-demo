@@ -59,10 +59,11 @@ fromEvent(document.body, 'mousemove')
     }
   });
 
-const focus$: BehaviorSubject<null | HTMLElement> = new BehaviorSubject(
+const selected$: BehaviorSubject<null | HTMLElement> = new BehaviorSubject(
   getCellElement('A1')
 );
-const edit$: BehaviorSubject<null | HTMLElement> = new BehaviorSubject(null);
+enum MODE { VIEW, INSERT }
+const mode$: BehaviorSubject<MODE> = new BehaviorSubject(MODE.VIEW);
 
 const getClosestCell = map(({ target }: Event) =>
   (target as HTMLElement).closest('.cell')
@@ -72,11 +73,11 @@ const getClosestCell = map(({ target }: Event) =>
 fromEvent(cellsElement, 'click')
   .pipe(getClosestCell)
   .subscribe((newFocus: HTMLElement | null) => {
-    focus$.next(newFocus);
+    selected$.next(newFocus);
   });
 
 // Display focused cell
-focus$
+selected$
   .pipe(
     startWith(null),
     pairwise()
@@ -110,8 +111,8 @@ enum KEY_CODES {
 
 fromEvent<KeyboardEvent>(document.body, 'keydown')
   .pipe(
-    filter(event => event.key in KEY_CODES && edit$.value === null),
-    withLatestFrom(focus$)
+    filter(event => event.key in KEY_CODES && mode$.value === MODE.VIEW),
+    withLatestFrom(selected$)
   )
   .subscribe(([event, cell]: [KeyboardEvent, HTMLElement]) => {
     event.stopPropagation();
@@ -121,44 +122,44 @@ fromEvent<KeyboardEvent>(document.body, 'keydown')
       case KEY_CODES.ArrowLeft:
         index = ALPHABET.indexOf(x) - 1;
         if (index >= 0) {
-          focus$.next(getCellElement(ALPHABET[index] + y));
+          selected$.next(getCellElement(ALPHABET[index] + y));
         }
         break;
       case KEY_CODES.ArrowRight:
         index = ALPHABET.indexOf(x) + 1;
         if (index < ALPHABET.length) {
-          focus$.next(getCellElement(ALPHABET[index] + y));
+          selected$.next(getCellElement(ALPHABET[index] + y));
         }
         break;
       case KEY_CODES.ArrowUp:
         index = parseInt(y, 10) - 1;
         if (index > 0) {
-          focus$.next(getCellElement(x + index));
+          selected$.next(getCellElement(x + index));
         }
         break;
       case KEY_CODES.ArrowDown:
         index = parseInt(y, 10) + 1;
         if (index <= NUMBERS.length) {
-          focus$.next(getCellElement(x + index));
+          selected$.next(getCellElement(x + index));
         }
         break;
       // TODO: 12 initiate editing on cell ENTER
       case KEY_CODES.Enter:
-        edit$.next(cell);
+        mode$.next(MODE.INSERT);
         break;
     }
   });
 
 // emit start cell edit from input
 fromEvent(inputElement, 'focus')
-  .pipe(filter(() => edit$.value === null && focus$.value !== null))
+  .pipe(filter(() => mode$.value === MODE.VIEW))
   .subscribe(() => {
-    edit$.next(focus$.value);
+    mode$.next(MODE.INSERT);
   });
 
 // emit end cell edit from input
 const inputBlur$ = fromEvent(inputElement, 'blur').pipe(
-  filter(() => edit$.value !== null && focus$.value !== null)
+  filter(() => mode$.value === MODE.INSERT)
 );
 
 const inputEnter$ = fromEvent(inputElement, 'keydown').pipe(
@@ -168,13 +169,13 @@ const inputEnter$ = fromEvent(inputElement, 'keydown').pipe(
 merge(inputBlur$, inputEnter$).subscribe(
   (event: KeyboardEvent | InputEvent) => {
     event.stopPropagation();
-    edit$.next(null);
+    mode$.next(MODE.VIEW);
   }
 );
 
 // Listen to start editing
-edit$.subscribe(cell => {
-  if (cell instanceof HTMLElement) {
+mode$.subscribe(mode => {
+  if (mode === MODE.INSERT) {
     inputElement.focus();
   } else {
     cellsElement.focus();
@@ -184,11 +185,10 @@ edit$.subscribe(cell => {
 // emit cell input
 fromEvent(inputElement, 'input')
   .pipe(
-    withLatestFrom(edit$),
-    filter(([event, cell]) => cell instanceof HTMLElement),
-    map(([event, cell]) => ({
+    filter(() => mode$.value === MODE.INSERT),
+    map((event) => ({
       value: event.target.value,
-      cell: getCell(cell.dataset.id),
+      cell: getCell(selected$.value.dataset.id),
     }))
   )
   .subscribe(({ value, cell }: { value: string; cell: Cell }) => {
@@ -196,7 +196,7 @@ fromEvent(inputElement, 'input')
   });
 
 // update input cell address when cell focus changed
-focus$
+selected$
   .pipe(
     filter(element => element instanceof HTMLElement),
     map((element: HTMLElement) => element.dataset.id)
@@ -208,7 +208,7 @@ focus$
   });
 
 // Listen to error messages
-focus$
+selected$
   .pipe(
     filter(cell => cell instanceof HTMLElement),
     map<HTMLElement, Cell>(cell => getCell(cell.dataset.id)),
@@ -220,13 +220,13 @@ focus$
   });
 
 // Highlight cell's dependency
-edit$
+mode$
   .pipe(
-    switchMap(cellElement => {
-      if (!(cellElement instanceof HTMLElement)) {
+    switchMap(mode => {
+      if (mode === MODE.VIEW) {
         return of([]);
       }
-      const cell = getCell(cellElement.dataset.id);
+      const cell = getCell(selected$.value.dataset.id);
       return cell.output$.pipe(map(() => cell.dependency));
     }),
     map<Cell[], HTMLElement[]>(cells => cells.map(cell => cell.element)),
