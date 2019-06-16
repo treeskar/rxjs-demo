@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/treeskar/rxjs-demo/compare/v1.0.1...v1.0.2) (2019-06-16)
+
+
+### Bug Fixes
+
+* update color scheme ([2c28d4a](https://github.com/treeskar/rxjs-demo/commit/2c28d4a))
+
 ## [1.0.1](https://github.com/treeskar/rxjs-demo/compare/v1.0.0...v1.0.1) (2019-06-15)
 
 
