@@ -8,7 +8,8 @@
     "watch": "webpack --watch",
     "build": "webpack",
     "travis-deploy-once": "travis-deploy-once",
-    "semantic-release": "semantic-release"
+    "semantic-release": "semantic-release",
+    "postinstall": "npm run start"
   },
   "author": "",
   "license": "MIT",
