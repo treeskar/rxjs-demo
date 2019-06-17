@@ -6,7 +6,7 @@ node_js: lts/*
 notifications:
   email: false
 script:
-  - npm test -- --coverage
+  - npm test -- --coverage --coverageReporters=text-lcov | node_modules/.bin/coveralls
   - npm run build
 after_success:
   - npx semantic-release
