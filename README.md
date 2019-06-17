@@ -3,8 +3,8 @@
 
 # About
 
-Simple rxjs implementation with demo
-I did it for fun but maybe someone will find it useful.
+Simple rxjs implementation with demo.
+I did it for fun, but maybe someone will find it useful.
 
 [Demo](https://treeskar.github.io/rxjs-demo/)
 
