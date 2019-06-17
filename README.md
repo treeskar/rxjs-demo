@@ -11,5 +11,6 @@ I did it for fun, but maybe someone will find it useful.
 # Usage
 
 ```
+npm install
 npm start
 ```
