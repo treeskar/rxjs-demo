@@ -7,11 +7,11 @@ module.exports = {
   entry: './src/index.ts',
   mode: 'development',
   resolve: {
-    extensions: [ '.ts', '.tsx', '.js' ]
+    extensions: ['.ts', '.tsx', '.js'],
   },
   output: {
     filename: 'bundle.js',
-    path: path.resolve(__dirname, 'dist')
+    path: path.resolve(__dirname, 'dist'),
   },
   plugins: [
     new CleanWebpackPlugin(),
@@ -19,25 +19,27 @@ module.exports = {
       title: 'Excel',
       favicon: './src/assets/favicon.ico',
     }),
-    new CopyWebpackPlugin([{
-      from: './src/assets',
-      to: './assets',
-    }]),
+    new CopyWebpackPlugin([
+      {
+        from: './src/assets',
+        to: './assets',
+      },
+    ]),
   ],
   module: {
     rules: [
       {
         test: /\.tsx?$/,
         use: 'ts-loader',
-        exclude: /node_modules/
+        exclude: [/node_modules/, /\.spec.ts$/],
       },
       {
         test: /\.scss$/,
         use: [
           'style-loader', // creates style nodes from JS strings
           'css-loader',
-          'sass-loader' // compiles Sass to CSS, using Node Sass by default
-        ]
+          'sass-loader', // compiles Sass to CSS, using Node Sass by default
+        ],
       },
       {
         test: /\.(png|svg|jpg|gif)$/,
@@ -49,12 +51,12 @@ module.exports = {
             },
           },
         ],
-      }
-    ]
+      },
+    ],
   },
   devtool: 'source-map',
   devServer: {
     contentBase: './dist',
-    port: 8081
+    port: 8081,
   },
 };
