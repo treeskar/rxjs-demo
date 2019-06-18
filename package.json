@@ -8,7 +8,7 @@
     "watch": "webpack --watch",
     "build": "webpack",
     "test": "jest -c jest.config.js",
-    "e2e": "npm run build && concurrently 'node_modules/.bin/http-server dist -p 8080' 'node_modules/.bin/cypress run --browser chrome' -k",
+    "e2e": "npm run build && concurrently 'node_modules/.bin/http-server dist -p 8080' 'node_modules/.bin/cypress run --browser chrome --record --key $CYPRESS_RECORD_KEY' -k",
     "cypress": "cypress open",
     "travis-deploy-once": "travis-deploy-once",
     "semantic-release": "semantic-release"

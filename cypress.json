@@ -1,5 +1,6 @@
 {
   "baseUrl": "http://localhost:8080",
   "reporter": "mochawesome",
-  "video": false
+  "video": false,
+  "projectId": "jkye41"
 }

@@ -1,5 +1,6 @@
 language: node_js
 addons:
+  chrome: stable
   apt:
     packages:
       # Ubuntu 16+ does not install this dependency by default, so we need to install it ourselves
