@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" version="1.1"
+     style="shape-rendering:geometricPrecision;text-rendering:geometricPrecision;image-rendering:optimizeQuality;"
+     viewBox="0 0 274 150" x="0px" y="0px" fill-rule="evenodd" clip-rule="evenodd">
+    <path fill="#eee" d="M137 42c29,0 52,23 52,52 0,29 -23,53 -52,53 -29,0 -52,-24 -52,-53 0,-29 23,-52 52,-52zm0 20c-18,0 -32,14 -32,32 0,18 14,33 32,33 18,0 32,-15 32,-33 0,-18 -14,-32 -32,-32z"/>
+    <path fill="#eee" d="M16 61c-11,7 -22,-10 -11,-17 87,-58 177,-59 265,0 10,7 -1,24 -12,16 -80,-54 -161,-53 -242,1z"/>
+</svg>
