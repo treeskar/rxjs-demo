@@ -1,6 +1,5 @@
 language: node_js
 addons:
-  chrome: stable
   apt:
     packages:
       # Ubuntu 16+ does not install this dependency by default, so we need to install it ourselves
@@ -18,7 +17,7 @@ script:
   - npm test -- --coverage --coverageReporters=text-lcov | node_modules/.bin/coveralls
   - npm run build
   - npm run start:serve
-  - node_modules/.bin/cypress run --browser chrome --record --key $CYPRESS_RECORD_KEY
+  - node_modules/.bin/cypress run --record --key $CYPRESS_RECORD_KEY
   - npm run stop:serve
 after_success:
   - npx semantic-release

@@ -4,11 +4,11 @@
   "description": "Simple rxjs implementation",
   "main": "index.js",
   "scripts": {
-    "start": "webpack-dev-server --open",
+    "start": "PORT=8081 webpack-dev-server --open",
     "watch": "webpack --watch",
     "build": "webpack",
     "test": "jest -c jest.config.js",
-    "start:serve": "pm2 start node_modules/.bin/http-server --name server -- dist -p 8080",
+    "start:serve": "pm2 start node_modules/.bin/http-server --name server -- dist -p 8081",
     "stop:serve": "pm2 stop server",
     "cypress": "cypress open",
     "travis-deploy-once": "travis-deploy-once",

@@ -11,7 +11,7 @@ import { FUNCTIONS, FunctionType } from './functions';
 import { cellsElement } from './bootstrap';
 
 export const CELL_ID_PATTERN = /^[A-F][1-6]$/;
-export const FUNCTION_PATTERN = /^(?<functionName>[A-Z]+)\((?<args>[A-Z0-9, ()]*)\)?$/;
+export const FUNCTION_PATTERN = /^([A-Z]+)\(([A-Z0-9, ()]*)\)?$/;
 export const ARGUMENT_MATCHER = /([A-Z]+\([A-Z0-9, ()]*?\)+)|([A-Z0-9]+)/g;
 
 export type CellOutputType = string | number | Error;
@@ -93,10 +93,9 @@ export class Cell {
     if (result === null) {
       return of(argument);
     }
-    const {
-      groups: { functionName, args },
-    } = result;
-    if (FUNCTIONS.has(functionName)) {
+    const functionName = result[1];
+    const args = result[2];
+    if (FUNCTIONS.has(result[1])) {
       return this.exec(
         FUNCTIONS.get(functionName),
         args.match(ARGUMENT_MATCHER) || []
